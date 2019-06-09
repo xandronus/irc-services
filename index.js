@@ -1,5 +1,9 @@
 const micro = require('micro')
+const { parse } = require('url')
+const querystring = require('querystring')
 
-module.exports = micro((req, res) => {
-  return 'Hello from Micro on Now 2.0!'
-})
+module.exports = async (req, res) => {
+  const url = await parse(req.url)
+  const query = await querystring.parse(url.query)
+  micro.send(res, 200, query)
+}

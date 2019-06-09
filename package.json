@@ -1,6 +1,15 @@
 {
     "name": "irc-services",
+    "scripts": {
+        "test": "ava"
+    },
     "dependencies": {
         "micro": "^9.3.5-canary.1"
+    },
+    "devDependencies": {
+        "ava": "^2.0.0",
+        "request": "^2.88.0",
+        "request-promise": "^4.2.4",
+        "test-listen": "^1.1.0"
     }
 }
