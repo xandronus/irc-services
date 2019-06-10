@@ -1,2 +1,2 @@
 # irc-services
-Hosted IRC Microservices
+Hosted DCL Chat Microservices
