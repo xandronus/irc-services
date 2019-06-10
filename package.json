@@ -4,7 +4,10 @@
         "test": "ava"
     },
     "dependencies": {
-        "micro": "^9.3.5-canary.1"
+        "dotenv": "^8.0.0",
+        "micro": "^9.3.5-canary.1",
+        "mongodb": "^3.2.7",
+        "mongoose": "^5.5.14"
     },
     "devDependencies": {
         "ava": "^2.0.0",
