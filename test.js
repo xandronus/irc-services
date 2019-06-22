@@ -73,6 +73,7 @@ test('test_connectdb', async t => {
   service.close()
 })
 
+/*
 test('test_createuser', async t => {
   const service = new http.Server(micro(async (req, res) => {    
     api(req, res)
@@ -94,7 +95,78 @@ test('test_createuser', async t => {
   t.is(body.success, true, JSON.stringify(body))
   service.close()
 })
+*/
 
+/*
+test('test_createmessage', async t => {
+  const service = new http.Server(micro(async (req, res) => {    
+    api(req, res)
+  }))
+  
+  var url = await listen(service)
+  url += '?command=createmessage'
+  var options = {
+    method: 'POST',
+    uri: url,
+    body: {
+      userid: '5d0e79ecc5273510bd04aaa3',
+      text: 'This is a test message 3'
+    },
+    json: true,
+    headers: {
+      api_key: process.env.API_KEY
+    }
+  }
+  const body = await request(options)
+
+  t.is(body.success, true, JSON.stringify(body))
+  service.close()
+})
+*/
+
+
+test('test_getuser', async t => {
+  const service = new http.Server(micro(async (req, res) => {    
+    api(req, res)
+  }))
+  
+  var url = await listen(service)
+  url += '?command=getuser&nick=satoshi'
+  var options = {
+    method: 'GET',
+    uri: url,
+    json: true,
+    headers: {
+      api_key: process.env.API_KEY
+    }
+  }
+  const body = await request(options)
+
+  t.is(body.success, true, JSON.stringify(body))
+  service.close()
+})
+
+
+test('test_getmessages', async t => {
+  const service = new http.Server(micro(async (req, res) => {    
+    api(req, res)
+  }))
+  
+  var url = await listen(service)
+  url += '?command=getmessages&after=2019-06-22'
+  var options = {
+    method: 'GET',
+    uri: url,
+    json: true,
+    headers: {
+      api_key: process.env.API_KEY
+    }
+  }
+  const body = await request(options)
+
+  t.is(body.success, true, JSON.stringify(body))
+  service.close()
+})
 
 test('test_unauthorized', async t => {
   const service = new http.Server(micro(async (req, res) => {

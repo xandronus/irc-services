@@ -6,7 +6,6 @@ const { parse } = require('url')
 const querystring = require('querystring')
 //const config = require('./config.json')
 const mongoose = require('mongoose')
-const uuidv4 = require('uuid/v4');
 
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
@@ -14,15 +13,13 @@ if (process.env.NODE_ENV !== 'production') {
 
 var userSchema = null 
 var messageSchema = null
-var textSchema = null
 
 const database = {   
   getModels: async function() {    
     var User = await mongoose.model('User', userSchema)
     var Message = await mongoose.model('Message', messageSchema)
-    var Text = await mongoose.model('Text', textSchema)
   
-    return {'User': User, 'Message': Message, 'Text': Text}
+    return {'User': User, 'Message': Message}
   },
 
   connect: async function(onConnected) {
@@ -38,22 +35,13 @@ const database = {
   },
 
   createSchema: function() {
-    if (!textSchema) {
-      textSchema = new mongoose.Schema({
-        _id:  mongoose.Schema.Types.ObjectId,
-        text: String
-      })
-    }
-
     if (!messageSchema) {
       messageSchema = new mongoose.Schema({
         _id:  mongoose.Schema.Types.ObjectId,
-        channelid: String,
-        parentid: String,
-        postedbyid: String,
+        postedbyid: mongoose.Schema.Types.ObjectId,
+        postedby: {userid: mongoose.Schema.Types.ObjectId, nick: String},
         timestamp: Date,
         content: [
-          { type: String, id: String }
         ]
       })
     }
@@ -102,44 +90,79 @@ async function requestCreateUser(user, callback) {
   })
 }
 
-/*
 async function requestCreateMessage(options, callback) {
   database.connect(async() => {
    const model = await database.getModels()
     if (model) {
-      var contentId = uuidv4();
-      var messageId = uuidv4();
-      var messageContent = new model.Text({ _id: contentId, text: options.text })
+      var messageId = new mongoose.Types.ObjectId;
       var newMessage = new model.Message({ 
-        _id: messageId, 
-        postedbyid: options.userid, 
+        _id: messageId,
         timestamp: Date.now(),
         content: [
-          {type: 'text', id: 'contentId'}
+           {contenttype: 'text', text: options.text}
         ] 
       })
 
-      messageContent.save(function(err) {
-        if (err) 
-          callback({'success': false, message: `Cannot save message content for user ${options.userid}.`}, false)
-        else {
+      model.User.findById(new mongoose.Types.ObjectId(options.userid), function(err, user) {
+        if (err){
+          callback(false, {'success': false, 'message': `User record not found ${options.userid}`})        
+        } else {
+          newMessage.postedby = {userid: user._id, nick: user.nick}
           newMessage.save(function(err) {
             if (err) {            
               callback({'success': false, message: `Cannot save message for user ${options.userid}.`}, false)
             } else{
-              var results = {contentid: messageContent._id, }
-              callback(false, {'success': true, 'message': ''})
+              var result = {messageid: messageId }
+              callback(false, {'success': true, 'message': result})
             }
           })
         }
-      });
+      })
+    } else {
+      callback({'success': false, message: 'No model for messages.'}, false)
+    }
+  })
+}
+
+async function requestGetUser(user, callback) {
+  database.connect(async() => {
+   const model = await database.getModels()
+    if (model) {
+      model.User.find({ nick: user.nick }, function (err, users) {
+        if (err) {
+          callback({'success': false, message: `No user found by nick ${user.nick}.`}, false)
+        }
+        else {
+          var returnVal = users
+          callback(false, {'success': true, 'message': returnVal})        
+        }
+      })
     } else {
       callback({'success': false, message: 'No model for user.'}, false)
     }
   })
 }
-*/
 
+async function requestGetMessages(options, callback) {
+  database.connect(async() => {
+   const model = await database.getModels()
+    if (model) {
+      var search = {}
+      if (options.after)
+        search = {timestamp: {$gt: options.after}}
+      model.Message.find(search,function (err, messages) {
+        if (err) {
+          callback({'success': false, message: `No messages found.`}, false)
+        }
+        else {
+          callback(false, {'success': true, 'message': messages})        
+        }
+      })
+    } else {
+      callback({'success': false, message: 'No model for user.'}, false)
+    }
+  })
+}
 
 var commandDispatcher = {
     connectdb: function(options) {
@@ -156,6 +179,39 @@ var commandDispatcher = {
     createuser: function(options) {
       return new Promise(function(resolve, reject) {
         requestCreateUser(options, function(err, result) {
+          if (err) {
+              reject(err)
+          } else {
+              resolve(result)
+          }
+        })
+      })
+    },
+    createmessage: function(options) {
+      return new Promise(function(resolve, reject) {
+        requestCreateMessage(options, function(err, result) {
+          if (err) {
+              reject(err)
+          } else {
+              resolve(result)
+          }
+        })
+      })
+    },
+    getuser: function(options) {
+      return new Promise(function(resolve, reject) {
+        requestGetUser(options, function(err, result) {
+          if (err) {
+              reject(err)
+          } else {
+              resolve(result)
+          }
+        })
+      })
+    },
+    getmessages: function(options) {
+      return new Promise(function(resolve, reject) {
+        requestGetMessages(options, function(err, result) {
           if (err) {
               reject(err)
           } else {
