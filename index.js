@@ -139,14 +139,15 @@ var commandDispatcher = {
 module.exports = async (req, res) => {
   const url = await parse(req.url)
   const query = await querystring.parse(url.query)
-  if (!req.headers.API_KEY || req.headers.API_KEY !== process.env.API_KEY)
+  const apikey = req.headers.api_key
+  if (!apikey || apikey !== process.env.API_KEY)
     micro.send(res, 401, {'success': false, 'message': 'Authorization failure.'})
   else {
     if (query.command in commandDispatcher) {
       var options = query
-      if (req.method !== 'GET') {
-        options = JSON.parse(req.body)
-      }
+      var method = req.method     
+      if (method !== 'GET')
+        options = await micro.json(req)
       commandDispatcher[query.command](options)
         .then(result => {
           micro.send(res, 200, result)
