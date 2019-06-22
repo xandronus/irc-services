@@ -83,7 +83,7 @@ test('test_createuser', async t => {
   var options = {
     method: 'POST',
     uri: url,
-    body: {'id':1, 'nick': 'satoshi'},
+    body: {'nick': 'satoshi'},
     json: true,
     headers: {
       'api_key': process.env.API_KEY

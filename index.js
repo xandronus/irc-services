@@ -6,6 +6,7 @@ const { parse } = require('url')
 const querystring = require('querystring')
 //const config = require('./config.json')
 const mongoose = require('mongoose')
+const uuidv4 = require('uuid/v4');
 
 if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
@@ -39,20 +40,18 @@ const database = {
   createSchema: function() {
     if (!textSchema) {
       textSchema = new mongoose.Schema({
-        _id:  String,
-        postedby: String,
-        date: Date,
-        content: [
-          { type: String, id: String }
-        ]
+        _id:  mongoose.Schema.Types.ObjectId,
+        text: String
       })
     }
 
     if (!messageSchema) {
       messageSchema = new mongoose.Schema({
-        _id:  String,
-        postedby: String,
-        date: Date,
+        _id:  mongoose.Schema.Types.ObjectId,
+        channelid: String,
+        parentid: String,
+        postedbyid: String,
+        timestamp: Date,
         content: [
           { type: String, id: String }
         ]
@@ -61,7 +60,7 @@ const database = {
 
     if (!userSchema) {
       userSchema = new mongoose.Schema({
-        _id:  String,
+        _id:  mongoose.Schema.Types.ObjectId,
         nick: String
       })
     }
@@ -87,18 +86,60 @@ async function requestCreateUser(user, callback) {
   database.connect(async() => {
    const model = await database.getModels()
     if (model) {
-      var newUser = new model.User({_id: user.id, nick: user.nick})
+      var newId = new mongoose.Types.ObjectId;
+      var newUser = new model.User({_id: newId, nick: user.nick})
       newUser.save(function(err) {
         if (err) 
-          callback({'success': false, message: `Cannot create user ${user.id}.`}, false)
-        
-        callback(false, {'success': true, 'message': ''})
+          callback({'success': false, message: `Cannot create user ${user.nick}.`}, false)
+        else {
+          var returnVal = {id: newId}
+          callback(false, {'success': true, 'message': returnVal})
+        }
       });
     } else {
       callback({'success': false, message: 'No model for user.'}, false)
     }
   })
 }
+
+/*
+async function requestCreateMessage(options, callback) {
+  database.connect(async() => {
+   const model = await database.getModels()
+    if (model) {
+      var contentId = uuidv4();
+      var messageId = uuidv4();
+      var messageContent = new model.Text({ _id: contentId, text: options.text })
+      var newMessage = new model.Message({ 
+        _id: messageId, 
+        postedbyid: options.userid, 
+        timestamp: Date.now(),
+        content: [
+          {type: 'text', id: 'contentId'}
+        ] 
+      })
+
+      messageContent.save(function(err) {
+        if (err) 
+          callback({'success': false, message: `Cannot save message content for user ${options.userid}.`}, false)
+        else {
+          newMessage.save(function(err) {
+            if (err) {            
+              callback({'success': false, message: `Cannot save message for user ${options.userid}.`}, false)
+            } else{
+              var results = {contentid: messageContent._id, }
+              callback(false, {'success': true, 'message': ''})
+            }
+          })
+        }
+      });
+    } else {
+      callback({'success': false, message: 'No model for user.'}, false)
+    }
+  })
+}
+*/
+
 
 var commandDispatcher = {
     connectdb: function(options) {
