@@ -4,7 +4,15 @@
       { "src": "index.js", "use": "@now/node" }
     ],
     "routes": [
-      { "src": "/(.*)", "dest": "/index.js" }
+      { "src": "/(.*)",
+        "methods": ["GET", "POST", "OPTIONS"],
+        "headers": {
+          "Access-Control-Allow-Origin": "\*",
+          "Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept, api_key",
+          "Access-Control-Allow-Credentials": "true"
+        },
+        "dest": "/index.js"
+      }
     ],
     "env": {
       "DB_CONN": "@dbsecret",
