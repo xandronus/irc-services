@@ -171,7 +171,15 @@ async function requestGetUser(user, callback) {
         }
         else {
           var returnVal = users
-          callback(false, {'success': true, 'message': returnVal})        
+          if (users) {
+            callback(false, {'success': true, 'message': returnVal})        
+          } else {
+            if (user.create) {
+              requestCreateUser(user, callback)
+            } else {          
+              callback({'success': false, message: `No user found by nick ${user.nick}.`}, false)
+            } 
+          }
         }
       })
     } else {
