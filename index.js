@@ -171,7 +171,7 @@ async function requestGetUser(user, callback) {
         }
         else {
           var returnVal = users
-          if (users) {
+          if (users.length > 0) {
             callback(false, {'success': true, 'message': returnVal})        
           } else {
             if (user.create) {
